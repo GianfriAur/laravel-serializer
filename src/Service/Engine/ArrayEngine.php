@@ -51,7 +51,7 @@ class ArrayEngine implements EngineInterface
     /**
      * @throws \Exception
      */
-    public function serializeObject(mixed $object, $serialization_metadata): mixed
+    public function serializeObject(mixed $object, $serialization_metadata): array
     {
         $serialized = [];
         foreach ($serialization_metadata['properties'] as $name => $description){
@@ -132,7 +132,7 @@ class ArrayEngine implements EngineInterface
     }
 
 
-    public function getEmptySerialization(): mixed
+    public function getEmptySerialization(): array
     {
         return [];
     }

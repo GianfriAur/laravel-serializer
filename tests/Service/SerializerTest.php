@@ -24,12 +24,9 @@ class SerializerTest extends \Orchestra\Testbench\TestCase
     private function log($var)
     {
         $this->expectOutputString(''); // tell PHPUnit to expect '' as output
-        print_r("Hello World");
-        print "Ping";
-        echo "Pong";
-        $out = "Foo";
-        dd("\n", $var);
+        dd( $var);
     }
+
 
     private function getNewSerializer(): DefaultSerializer
     {

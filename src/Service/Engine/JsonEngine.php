@@ -20,7 +20,7 @@ class JsonEngine implements EngineInterface
         return 'json';
     }
 
-    public function serializeObject(mixed $object, $serialization_metadata): mixed
+    public function serializeObject(mixed $object, $serialization_metadata): string
     {
         return json_encode(
             $this->serializer->getEngineByNameOrFail('array')->serializeObject($object, $serialization_metadata)
@@ -28,7 +28,7 @@ class JsonEngine implements EngineInterface
     }
 
 
-    public function getEmptySerialization(): mixed
+    public function getEmptySerialization(): string
     {
         return '{}';
     }

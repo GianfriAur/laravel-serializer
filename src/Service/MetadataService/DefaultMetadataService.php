@@ -15,7 +15,11 @@ class DefaultMetadataService implements MetadataServiceInterface
 
     private function createObjectMetadataIfNotExist($objectClass): void
     {
-        if (!$this->data[$objectClass]) $data[$objectClass] = [];
+        if (!array_key_exists($objectClass,$this->data)) $this->data[$objectClass] = [];
+    }
+    private function createObjectPropertyMetadataIfNotExist($objectClass, $group, $propertyName,): void
+    {
+        if (!array_key_exists($propertyName,$this->data[$objectClass][$group]['properties'])) $this->data[$objectClass][$group]['properties'][$propertyName] = [];
     }
 
     public function addGroup($objectClass, $name, array $properties): void
@@ -33,6 +37,7 @@ class DefaultMetadataService implements MetadataServiceInterface
     public function addPropertyGetter($objectClass, $group, $propertyName, $propertyGetterDescription): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
+        $this->createObjectPropertyMetadataIfNotExist($objectClass, $group, $propertyName);
         $this->data[$objectClass][$group]['properties'][$propertyName]['get'] = $propertyGetterDescription;
     }
 
@@ -40,18 +45,19 @@ class DefaultMetadataService implements MetadataServiceInterface
     {
         $this->createObjectMetadataIfNotExist($objectClass);
         if (!$propertyOriginalName) $propertyOriginalName = $propertyName;
-        $this->data[$objectClass][$group]['properties'][$propertyName]['get'] = ['type' => 'direct', 'property' => $propertyOriginalName];
+        $this->addPropertyGetter($objectClass, $group, $propertyName,['type' => 'direct', 'property' => $propertyOriginalName]);
     }
 
     public function addPropertyFunctionGetter($objectClass, $group, $propertyName, $functionName, array $functionArgs = []): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
-        $this->data[$objectClass][$group]['properties'][$propertyName]['get'] = ['type' => 'function', 'name' => $functionName, 'args' => $functionArgs];
+        $this->addPropertyGetter($objectClass, $group, $propertyName,['type' => 'function', 'name' => $functionName, 'args' => $functionArgs]);
     }
 
     public function addPropertySetter($objectClass, $group, $propertyName, $propertyGetterDescription): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
+        $this->createObjectPropertyMetadataIfNotExist($objectClass, $group, $propertyName);
         $this->data[$objectClass][$group]['properties'][$propertyName]['set'] = $propertyGetterDescription;
     }
 
@@ -59,24 +65,26 @@ class DefaultMetadataService implements MetadataServiceInterface
     {
         $this->createObjectMetadataIfNotExist($objectClass);
         if (!$propertyOriginalName) $propertyOriginalName = $propertyName;
-        $this->data[$objectClass][$group]['properties'][$propertyName]['set'] = ['type' => 'direct', 'property' => $propertyOriginalName];
+        $this->addPropertySetter($objectClass, $group, $propertyName,['type' => 'direct', 'property' => $propertyOriginalName]);
     }
 
     public function addPropertyFunctionSetter($objectClass, $group, $propertyName, $functionName, array $functionArgs = []): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
-        $this->data[$objectClass][$group]['properties'][$propertyName]['set'] = ['type' => 'function', 'name' => $functionName, 'args' => $functionArgs];
+        $this->addPropertySetter($objectClass, $group, $propertyName,['type' => 'function', 'name' => $functionName, 'args' => $functionArgs]);
     }
 
     public function addPropertySerializedName($objectClass, $group, $propertyName, $serializedName): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
+        $this->createObjectPropertyMetadataIfNotExist($objectClass, $group, $propertyName);
         $this->data[$objectClass][$group]['properties'][$propertyName]['name'] = $serializedName;
     }
 
     public function addPropertyGroups($objectClass, $group, $propertyName, $propertyGroups): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
+        $this->createObjectPropertyMetadataIfNotExist($objectClass, $group, $propertyName);
         $this->data[$objectClass][$group]['properties'][$propertyName]['groups'] = $propertyGroups;
     }
 
@@ -89,6 +97,7 @@ class DefaultMetadataService implements MetadataServiceInterface
     public function addPropertyMetadataServiceProvider($objectClass, $group, $propertyName, $metadataServiceClass): void
     {
         $this->createObjectMetadataIfNotExist($objectClass);
+        $this->createObjectPropertyMetadataIfNotExist($objectClass, $group, $propertyName);
         $this->data[$objectClass][$group]['properties'][$propertyName]['metadata_service'] = $metadataServiceClass;
     }
 
@@ -125,7 +134,7 @@ class DefaultMetadataService implements MetadataServiceInterface
                 else
                     $merged[] = $value;
         }
-        return $merged;
+        return (is_array($merged) && $merged===array_filter($merged, 'is_string')) ? array_unique($merged,SORT_REGULAR) : $merged;
     }
 
 
@@ -137,8 +146,15 @@ class DefaultMetadataService implements MetadataServiceInterface
                 $groups_metadata[] = $group_metadata;
             }
         }
+        if (sizeof($groups_metadata) ===0 ){
+            return [
+                'properties' =>[],
+                'groups' => $groups,
+                'metadata_service' => self::class,
+            ];
+        }
         return [
-            'properties' => $this->metadataMergeRecursive(...$groups_metadata)['properties'],
+            'properties' => (sizeof($groups_metadata)>1 ? ($this->metadataMergeRecursive(...$groups_metadata)):($groups_metadata[0]))['properties'],
             'groups' => $groups,
             'metadata_service' => self::class,
         ];
