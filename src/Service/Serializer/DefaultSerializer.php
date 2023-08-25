@@ -258,6 +258,7 @@ class DefaultSerializer implements SerializerInterface
         }
 
         $serialized = $engine->serializeObject($object, $serialization_metadata,$serializationStack);
+
         if ($serialized == $engine->getEmptySerialization() && $this->getOptions()['serialize_empty_as_null'] === true) {
             return null;
         }
@@ -295,44 +296,11 @@ class DefaultSerializer implements SerializerInterface
      */
     public function serialize(mixed $object, array|string $group, ?string $engine = null, ?string $metadataProviderClass = null,?array $serializationStack=[]): mixed
     {
-        if ($object === null && $this->getOptions()['serialize_null_as_null'] === true) {
-            return null;
-        }
-
-        $is_primitive = in_array(
-            gettype($object)
-            , ['boolean', 'integer', 'double', 'string']
-        );
-
-        if ($is_primitive) {
-            if ($this->getOptions()['serialize_primitive'] === true) {
-                return $object;
-            } else {
-                throw new SerializePrimitiveException();
-            }
-
-        }
+        $groups = is_array($group) ? $group : [$group];
 
         $engine = $this->getEngineByName($engine ?? $this->getDefaultEngineName());
 
-        if (is_array($object) || $object instanceof Countable) {
-            $serialized = (new Collection($object))->map(
-                fn($object) => $this->actualSerialization($object, $group, $engine, $metadataProviderClass,$serializationStack)
-            )->toArray();
-
-        } else {
-            $serialized = $this->actualSerialization($object, $group, $engine, $metadataProviderClass,$serializationStack);
-        }
-
-        if ($serialized == $engine->getEmptySerialization() && $this->getOptions()['serialize_empty_as_null'] === true) {
-            return null;
-        }
-
-        if ($this->getOptions()['serialize_null'] === false) {
-            $serialized =  $this->clearArray($serialized);
-        }
-
-        return $serialized;
+        return $engine->serializeObject($object, $groups,$metadataProviderClass, $serializationStack, $this->getOptions());
 
     }
 

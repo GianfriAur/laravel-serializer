@@ -20,14 +20,19 @@ class JsonEngine implements EngineInterface
         return 'json';
     }
 
-    public function serializeObject(mixed $object, $serialization_metadata, ?array $serializationStack = []): string
+    public function serializeObject(mixed $object, array $group, ?string $metadataProviderClass,  ?array $serializationStack = [], array $options = []): string
     {
         return json_encode(
-            $this->serializer->getEngineByNameOrFail('array')->serializeObject($object, $serialization_metadata,$serializationStack)
+            $this->serializer->getEngineByNameOrFail('array')->serializeObject($object, $group,$metadataProviderClass,$serializationStack,$options)
         );
     }
 
-
+    public function serializeWithMetadata(mixed $object, array $serialization_metadata, ?array $serializationStack = [], array $options = []):?string
+    {
+        return json_encode(
+            $this->serializer->getEngineByNameOrFail('array')->serializeWithMetadata($object,  $serialization_metadata,  $serializationStack = [],  $options = [])
+        );
+    }
     public function getEmptySerialization(): string
     {
         return '{}';

@@ -12,6 +12,7 @@ use Gianfriaur\Serializer\Exception\SerializationIsNotAllowedForTypeException;
 use Gianfriaur\Serializer\Exception\SerializationMissingGetStrategyException;
 use Gianfriaur\Serializer\Exception\SerializePrimitiveException;
 use Gianfriaur\Serializer\Service\Engine\ArrayEngine;
+use Gianfriaur\Serializer\Service\Engine\JsonEngine;
 use Gianfriaur\Serializer\Service\MetadataService\DefaultMetadataService;
 use Gianfriaur\Serializer\Service\Serializer\DefaultSerializer;
 use Gianfriaur\Serializer\Tests\Service\ArrayEngineTest\Comment;
@@ -19,7 +20,7 @@ use Gianfriaur\Serializer\Tests\Service\ArrayEngineTest\Post;
 use Gianfriaur\Serializer\Tests\Service\ArrayEngineTest\TestClass;
 use Illuminate\Http\JsonResponse;
 
-class ArrayEngineTest extends \Orchestra\Testbench\TestCase
+class JsonEngineTest extends \Orchestra\Testbench\TestCase
 {
     /** @test */
     public function test_basic_test()
@@ -36,9 +37,11 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
     private function getNewSerializer(array $options): DefaultSerializer
     {
         $serializer = new DefaultSerializer($this->app, $options);
-        $engine = new ArrayEngine($this->app, $serializer);
-        $serializer->addEngine($engine);
-        $serializer->setDefaultEngine($engine);
+        $array_engine = new ArrayEngine($this->app, $serializer);
+        $json_engine = new JsonEngine($this->app, $serializer);
+        $serializer->addEngine($array_engine);
+        $serializer->addEngine($json_engine);
+        $serializer->setDefaultEngine($json_engine);
 
         $metadata_provider = new DefaultMetadataService();
 
@@ -154,7 +157,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize(null, ['test']);
 
-        $this->assertEquals(null, $serialized);
+        $this->assertEquals('null', $serialized);
     }
 
     public function test_empty_serialization_with_serialize_null_as_null_off()
@@ -163,7 +166,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize(null, ['test']);
 
-        $this->assertEquals([], $serialized);
+        $this->assertEquals('[]', $serialized);
     }
 
     public function test_primitive_serializations_with_serialize_primitive_off()
@@ -190,7 +193,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         foreach ($cases as $case) {
             $serialized = $serializer->serialize($case, ['test']);
-            $this->assertEquals([$case], $serialized);
+            $this->assertEquals(json_encode( [$case]), $serialized);
         }
     }
 
@@ -441,11 +444,11 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
             ]
         );
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "name" => "Foo",
             "surname" => "Bar",
             "age_diff" => 29,
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_testClass_serialization_base()
@@ -456,10 +459,10 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['base']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "name" => "Foo",
             "surname" => "Bar",
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_testClass_serialization_base_hi()
@@ -470,11 +473,11 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['base', 'hi']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "name" => "Foo",
             "surname" => "Bar",
             'hi' => 'Hi Serialization'
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_testClass_serialization_base_hi_son()
@@ -485,7 +488,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['base', 'hi', 'son']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "name" => "Foo",
             "surname" => "Bar",
             'hi' => 'Hi Serialization',
@@ -493,7 +496,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
                 'name' => '4_Foo',
                 'surname' => '4_Foo'
             ]
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_testClass_serialization_base_hi_sons()
@@ -504,7 +507,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['base', 'hi', 'sons']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "name" => "Foo",
             "surname" => "Bar",
             'hi' => 'Hi Serialization',
@@ -524,9 +527,7 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
                     ]
                 ]
             ]
-        ], $serialized);
-
-        $a = new JsonResponse();
+        ]), $serialized);
     }
 
     public function test_post_serialization_post_list()
@@ -544,10 +545,10 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['post_list']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             ["title" => "Post 1"],
             ["title" => "Post 2"]
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_post_serialization_post_detail()
@@ -560,10 +561,10 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['post_detail']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "title" => "Post 1",
             'content' => 'Post 1 comment'
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_comment_serialization_comment_list()
@@ -577,10 +578,10 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['comment_list']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             ["content" => "Comment 1"],
             ["content" => "Comment 2"]
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_comment_serialization_comment_detail()
@@ -596,13 +597,13 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['comment_detail']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "content" => "Comment 1",
             "post" => [
                 "title" => "Post 1",
                 'content' => 'Post 1 comment'
             ]
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_post_no_comments_serialization_post_detail_comment_list()
@@ -615,10 +616,10 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['post_detail', 'comment_list']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "title" => "Post 1",
             'content' => 'Post 1 comment'
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_post_with_comments_serialization_post_detail_comment_list()
@@ -638,14 +639,14 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['post_detail', 'comment_list']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "title" => "Post 1",
             'content' => 'Post 1 comment',
             'comments' => [
                 [ 'content' => 'Comment 1'],
                 ['content' => 'Comment 2']
             ]
-        ], $serialized);
+        ]), $serialized);
     }
 
     public function test_post_with_comments_serialization_post_detail_comment_list_recursive_with_exception()
@@ -670,14 +671,6 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['post_detail', 'comment_list_recursive']);
 
-        $this->assertEquals([
-            "title" => "Post 1",
-            'content' => 'Post 1 comment',
-            'comments' => [
-                [ 'content' => 'Comment 1'],
-                ['content' => 'Comment 2']
-            ]
-        ], $serialized);
     }
 
     public function test_post_with_comments_serialization_post_detail_comment_list_recursive_ok()
@@ -698,14 +691,14 @@ class ArrayEngineTest extends \Orchestra\Testbench\TestCase
 
         $serialized = $serializer->serialize($object, ['post_detail', 'comment_list_recursive']);
 
-        $this->assertEquals([
+        $this->assertEquals(json_encode([
             "title" => "Post 1",
             'content' => 'Post 1 comment',
             'comments' => [
                 [ 'content' => 'Comment 1'],
                 ['content' => 'Comment 2']
             ]
-        ], $serialized);
+        ]), $serialized);
     }
 
 }

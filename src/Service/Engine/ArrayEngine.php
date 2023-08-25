@@ -2,15 +2,19 @@
 
 namespace Gianfriaur\Serializer\Service\Engine;
 
+use Countable;
 use Gianfriaur\Serializer\Exception\MissingGetTypeStrategyException;
 use Gianfriaur\Serializer\Exception\MissingMetadataParameterException;
 use Gianfriaur\Serializer\Exception\ObjectMissingMethodException;
 use Gianfriaur\Serializer\Exception\ObjectMissingPropertyException;
+use Gianfriaur\Serializer\Exception\RecursiveSerializationException;
 use Gianfriaur\Serializer\Exception\SerializationIsNotAllowedForTypeException;
 use Gianfriaur\Serializer\Exception\SerializationMissingGetStrategyException;
+use Gianfriaur\Serializer\Exception\SerializePrimitiveException;
 use Gianfriaur\Serializer\Service\Serializer\SerializerInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Collection;
 use stdClass;
 
 class ArrayEngine implements EngineInterface
@@ -86,14 +90,27 @@ class ArrayEngine implements EngineInterface
         };
     }
 
-    /**
-     * @param mixed $object
-     * @param $serialization_metadata
-     * @return array
-     * @throws MissingGetTypeStrategyException
-     */
-    public function serializeObject(mixed $object, $serialization_metadata, ?array $serializationStack = []): array
+    private function clearArray($array):?array{
+
+        // if is array of arrays
+        if (array_reduce(array_map(fn($a)=>is_array($a), $array), fn($a, $b)=>$a && $b, true)){
+            foreach ($array as $key => $value) {
+                $array[$key] = $this->clearArray($value);
+            }
+        }
+
+        foreach ($array as $key => $value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
+    public function serializeWithMetadata(mixed $object, array $serialization_metadata, ?array $serializationStack = [], array $options = []):?array
     {
+
         $serialized = [];
         foreach ($serialization_metadata['properties'] as $name => $description) {
 
@@ -165,6 +182,79 @@ class ArrayEngine implements EngineInterface
                 }
             }
             $serialized[$name] = $value;
+        }
+
+        return $serialized;
+    }
+
+    private function serializeElement(mixed $object, array $groups, ?string $metadataProviderClass,  ?array $serializationStack = [], array $options = []){
+
+        $serialization_metadata = $this->serializer->getObjectSerializationMetadata($object, $groups, $metadataProviderClass);
+
+        if (!$serialization_metadata) {
+            return $this->getEmptySerialization();
+        }
+
+        if (in_array($object,$serializationStack)){
+            if ($options['prevent_recursive_serialization'] === true) {
+                return null;
+            }else{
+                throw new RecursiveSerializationException();
+            }
+        }else{
+            $serializationStack[] = $object;
+        }
+
+        $serialized = $this->serializeWithMetadata($object, $serialization_metadata,$serializationStack,$options);
+
+        if ($serialized == $this->getEmptySerialization() && $options['serialize_empty_as_null'] === true) {
+            return null;
+        }
+
+        return $serialized;
+    }
+
+    /**
+     * @param mixed $object
+     * @param $serialization_metadata
+     * @return array
+     * @throws MissingGetTypeStrategyException
+     */
+    public function serializeObject(mixed $object,array $group, ?string $metadataProviderClass ,?array $serializationStack = [], array $options = []): ?array
+    {
+
+        if ($object === null && $options['serialize_null_as_null'] === true) {
+            return null;
+        }
+
+        $is_primitive = in_array(
+            gettype($object)
+            , ['boolean', 'integer', 'double', 'string']
+        );
+
+        if ($is_primitive) {
+            if ($options['serialize_primitive'] === true) {
+                return [$object];
+            } else {
+                throw new SerializePrimitiveException();
+            }
+
+        }
+
+        if (is_array($object) || $object instanceof Countable) {
+            $serialized = (new Collection($object))->map(
+                fn($object) => $this->serializeElement($object, $group,$metadataProviderClass, $serializationStack,$options)
+            )->toArray();
+        } else {
+            $serialized = $this->serializeElement($object, $group,$metadataProviderClass ,$serializationStack,$options);
+        }
+
+        if ($serialized == $this->getEmptySerialization() && $options['serialize_empty_as_null'] === true) {
+            return null;
+        }
+
+        if ($options['serialize_null'] === false) {
+            $serialized =  $this->clearArray($serialized);
         }
 
         return $serialized;
