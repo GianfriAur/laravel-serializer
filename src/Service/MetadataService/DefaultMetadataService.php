@@ -103,6 +103,10 @@ class DefaultMetadataService implements MetadataServiceInterface
 
     public function hasSerializationMetadata(mixed $object, array $groups): bool
     {
+        if ($object === null) return false;
+
+
+
         //$groups_metadata =[];
         foreach ($this->data[$object] as $group_name => $group_metadata) {
             if (in_array($group_name, $groups)) {

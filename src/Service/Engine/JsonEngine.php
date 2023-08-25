@@ -20,10 +20,10 @@ class JsonEngine implements EngineInterface
         return 'json';
     }
 
-    public function serializeObject(mixed $object, $serialization_metadata): string
+    public function serializeObject(mixed $object, $serialization_metadata, ?array $serializationStack = []): string
     {
         return json_encode(
-            $this->serializer->getEngineByNameOrFail('array')->serializeObject($object, $serialization_metadata)
+            $this->serializer->getEngineByNameOrFail('array')->serializeObject($object, $serialization_metadata,$serializationStack)
         );
     }
 

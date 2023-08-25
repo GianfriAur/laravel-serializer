@@ -12,7 +12,7 @@ interface EngineInterface
 
     public function getEngineName(): string;
 
-    public function serializeObject(mixed $object, $serialization_metadata): mixed;
+    public function serializeObject(mixed $object, $serialization_metadata,?array $serializationStack=[]): mixed;
 
     public function getEmptySerialization(): mixed;
 

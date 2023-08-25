@@ -2,14 +2,20 @@
 
 namespace Gianfriaur\Serializer\Service\Serializer;
 
+use ArrayAccess;
+use Countable;
 use Gianfriaur\Serializer\Exception\EngineAlreadyRegisteredException;
 use Gianfriaur\Serializer\Exception\MetadataServiceAlreadyRegisteredException;
 use Gianfriaur\Serializer\Exception\MissingDefaultEngineException;
 use Gianfriaur\Serializer\Exception\MissingEngineException;
 use Gianfriaur\Serializer\Exception\MissingMetadataServiceException;
+use Gianfriaur\Serializer\Exception\RecursiveSerializationException;
+use Gianfriaur\Serializer\Exception\SerializePrimitiveException;
 use Gianfriaur\Serializer\Service\Engine\EngineInterface;
 use Gianfriaur\Serializer\Service\MetadataService\MetadataServiceInterface;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Collection;
 
 class DefaultSerializer implements SerializerInterface
 {
@@ -22,7 +28,16 @@ class DefaultSerializer implements SerializerInterface
     private array $metadata_services;
 
 
-    /** @noinspection PhpPropertyOnlyWrittenInspection */
+    /** @noinspection PhpPropertyOnlyWrittenInspection
+     * @param Application $app
+     * @param array{
+     *     serialize_null_as_null: bool,
+     *     serialize_empty_as_null: bool,
+     *     serialize_primitive: bool,
+     *     serialize_null: bool,
+     *     prevent_recursive_serialization: bool
+     * } $options
+     */
     public function __construct(
         private readonly Application $app,
         private readonly array       $options
@@ -31,6 +46,20 @@ class DefaultSerializer implements SerializerInterface
         $this->engines = [];
         $this->metadata_services = [];
         $this->default_engine_name = '';
+    }
+
+    private function getOptions(): array
+    {
+        return [
+            ...[
+                'serialize_null_as_null' => true,
+                'serialize_empty_as_null' => true,
+                'serialize_primitive' => false,
+                'serialize_null' => false,
+                'prevent_recursive_serialization' => false,
+            ],
+            ...$this->options
+        ];
     }
 
     /**
@@ -210,6 +239,50 @@ class DefaultSerializer implements SerializerInterface
         return $metadata_services;
     }
 
+    private function actualSerialization(mixed $object, array|string $group, EngineInterface $engine = null, ?string $metadataProviderClass = null,?array $serializationStack=[]): mixed
+    {
+        $serialization_metadata = $this->getObjectSerializationMetadata($object, is_array($group) ? $group : [$group], $metadataProviderClass);
+
+        if (!$serialization_metadata) {
+            return $engine->getEmptySerialization();
+        }
+
+        if (in_array($object,$serializationStack)){
+            if ($this->getOptions()['prevent_recursive_serialization'] === true) {
+                return null;
+            }else{
+                throw new RecursiveSerializationException();
+            }
+        }else{
+            $serializationStack[] = $object;
+        }
+
+        $serialized = $engine->serializeObject($object, $serialization_metadata,$serializationStack);
+        if ($serialized == $engine->getEmptySerialization() && $this->getOptions()['serialize_empty_as_null'] === true) {
+            return null;
+        }
+
+        return $serialized;
+    }
+
+    private function clearArray($array):?array{
+
+        // if is array of arrays
+        if (array_reduce(array_map(fn($a)=>is_array($a), $array), fn($a, $b)=>$a && $b, true)){
+            foreach ($array as $key => $value) {
+                $array[$key] = $this->clearArray($value);
+            }
+        }
+
+        foreach ($array as $key => $value) {
+            if ($value === null) {
+                unset($array[$key]);
+            }
+        }
+
+        return $array;
+    }
+
     /**
      * serialize your object
      * @param mixed $object
@@ -217,17 +290,50 @@ class DefaultSerializer implements SerializerInterface
      * @param string|null $engine
      * @param string|null $metadataProviderClass
      * @return mixed
+     * @throws MissingDefaultEngineException
+     * @throws SerializePrimitiveException
      */
-    public function serialize(mixed $object, array|string $group, ?string $engine = null, ?string $metadataProviderClass = null): mixed
+    public function serialize(mixed $object, array|string $group, ?string $engine = null, ?string $metadataProviderClass = null,?array $serializationStack=[]): mixed
     {
-        $engine = $this->getEngineByName($engine ?? $this->getDefaultEngineName());
-        $serialization_metadata = $this->getObjectSerializationMetadata($object, is_array($group) ? $group : [$group], $metadataProviderClass);
-
-        if (!$serialization_metadata){
-            return $engine->getEmptySerialization();
+        if ($object === null && $this->getOptions()['serialize_null_as_null'] === true) {
+            return null;
         }
 
-        return $engine->serializeObject($object, $serialization_metadata);
+        $is_primitive = in_array(
+            gettype($object)
+            , ['boolean', 'integer', 'double', 'string']
+        );
+
+        if ($is_primitive) {
+            if ($this->getOptions()['serialize_primitive'] === true) {
+                return $object;
+            } else {
+                throw new SerializePrimitiveException();
+            }
+
+        }
+
+        $engine = $this->getEngineByName($engine ?? $this->getDefaultEngineName());
+
+        if (is_array($object) || $object instanceof Countable) {
+            $serialized = (new Collection($object))->map(
+                fn($object) => $this->actualSerialization($object, $group, $engine, $metadataProviderClass,$serializationStack)
+            )->toArray();
+
+        } else {
+            $serialized = $this->actualSerialization($object, $group, $engine, $metadataProviderClass,$serializationStack);
+        }
+
+        if ($serialized == $engine->getEmptySerialization() && $this->getOptions()['serialize_empty_as_null'] === true) {
+            return null;
+        }
+
+        if ($this->getOptions()['serialize_null'] === false) {
+            $serialized =  $this->clearArray($serialized);
+        }
+
+        return $serialized;
+
     }
 
     /**
@@ -239,13 +345,14 @@ class DefaultSerializer implements SerializerInterface
      */
     public function getObjectSerializationMetadata(mixed $object, array $groups, ?string $metadataProviderClass): mixed
     {
+        if ($object === null) return null;
         $metadataProviders = $metadataProviderClass
             ? [$this->getMetadataService($metadataProviderClass)]
             : $this->getMetadataServices();
 
-        foreach ($metadataProviders as $metadataProvider){
-            if ($metadataProvider->hasSerializationMetadata($object, $groups)){
-                return $metadataProvider->getSerializationMetadata($object, $groups);
+        foreach ($metadataProviders as $metadataProvider) {
+            if ($metadataProvider->hasSerializationMetadata($object::class, $groups)) {
+                return $metadataProvider->getSerializationMetadata($object::class, $groups);
             }
         }
 
