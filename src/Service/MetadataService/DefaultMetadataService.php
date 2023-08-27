@@ -5,7 +5,7 @@ namespace Gianfriaur\Serializer\Service\MetadataService;
 class DefaultMetadataService implements MetadataServiceInterface
 {
 
-    private array $data = [];
+    protected array $data = [];
 
 
     public function __construct()
@@ -101,13 +101,10 @@ class DefaultMetadataService implements MetadataServiceInterface
         $this->data[$objectClass][$group]['properties'][$propertyName]['metadata_service'] = $metadataServiceClass;
     }
 
-    public function hasSerializationMetadata(mixed $object, array $groups): bool
+    public function hasSerializationMetadata(?string $object, array $groups): bool
     {
         if ($object === null) return false;
 
-
-
-        //$groups_metadata =[];
         foreach ($this->data[$object] as $group_name => $group_metadata) {
             if (in_array($group_name, $groups)) {
                 return true;
@@ -116,7 +113,7 @@ class DefaultMetadataService implements MetadataServiceInterface
         return false;
     }
 
-    private function metadataMergeRecursive(...$arrays)
+    protected function metadataMergeRecursive(...$arrays)
     {
         if (sizeof($arrays) < 2) {
             return;
@@ -154,30 +151,13 @@ class DefaultMetadataService implements MetadataServiceInterface
             return [
                 'properties' =>[],
                 'groups' => $groups,
-                'metadata_service' => self::class,
+                'metadata_service' => $this::class,
             ];
         }
         return [
             'properties' => (sizeof($groups_metadata)>1 ? ($this->metadataMergeRecursive(...$groups_metadata)):($groups_metadata[0]))['properties'],
             'groups' => $groups,
-            'metadata_service' => self::class,
+            'metadata_service' => $this::class,
         ];
-
-     /*   return [
-            'properties' => [
-                'property' => [
-                    'get' => ['type' => 'direct', 'property' => 'property'],
-                    'set' => ['type' => 'direct', 'property' => 'property'],
-                    'name' => 'sticazzi',
-                    //  'get'=>['type'=>'function','name'=>'getProperty', 'args'=>[]],
-                    //  'set'=>['type'=>'function','name'=>'setProperty', 'args'=>[]],
-                    'groups' => ['', ''],
-                    'default' => '',
-                    //'metadata_service'
-                ]
-            ],
-            'groups' => $groups,
-            'metadata_service' => self::class,
-        ];*/
     }
 }
