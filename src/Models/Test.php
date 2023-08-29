@@ -8,9 +8,9 @@ use  Gianfriaur\Serializer\Attribute as LS;
     'name',
     'surname',
     'posts' => 'post_list',
-    'private_read' => new LS\GetParameter('getPrivateRead', args: [1,'text']),
+    'private_read' => new LS\Get('getPrivateRead', args: [1,'text']),
     'private' => [
-        new LS\GetParameter('getPrivate'),
+        new LS\Get('getPrivate'),
         new LS\SetParameter('setPrivate')
     ],
 ])]

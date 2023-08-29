@@ -3,7 +3,7 @@
 namespace Gianfriaur\Serializer\Service\MetadataService;
 
 use Gianfriaur\Serializer\Attribute\AbstractSerializeAttribute;
-use Gianfriaur\Serializer\Attribute\GetParameter;
+use Gianfriaur\Serializer\Attribute\Get;
 use Gianfriaur\Serializer\Attribute\Group;
 use Gianfriaur\Serializer\Attribute\Groups;
 use Gianfriaur\Serializer\Attribute\MetadataProvider;
@@ -84,7 +84,7 @@ class AttributeMetadataService extends DefaultMetadataService
                     // throw exception Group can't have Group in parameters
                 }
 
-                if ($parameter instanceof GetParameter) {
+                if ($parameter instanceof Get) {
                     $metadata[$instance->name]['properties'][$key] = [
                         'get' => ['type' => 'function', 'name' => $parameter->method_name, 'args' => $parameter->args ?? []],
                         'name' => $key
@@ -119,7 +119,7 @@ class AttributeMetadataService extends DefaultMetadataService
                         // throw exception Group can't have Group in parameters
                     }
 
-                    if ($parameter_element instanceof GetParameter) {
+                    if ($parameter_element instanceof Get) {
                         $metadata[$instance->name]['properties'][$key] = [
                             'get' => ['type' => 'function', 'name' => $parameter_element->method_name, 'args' => $parameter_element->args ?? []],
                             'name' => $key

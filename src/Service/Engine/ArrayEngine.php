@@ -49,11 +49,11 @@ class ArrayEngine implements EngineInterface
                     throw new MissingMetadataParameterException('property');
                 }
 
-                if ($object instanceof Model) {
+                /* if ($object instanceof Model) {
                     if ($object->getAttribute($metadata['property'])) {
 
                     }
-                }
+                } */
 
                 if (property_exists($object, $metadata['property'])) {
                     return $object->{$metadata['property']};

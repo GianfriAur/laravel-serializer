@@ -3,13 +3,17 @@
 
 namespace Gianfriaur\Serializer\Attribute;
 
+use Gianfriaur\Serializer\Exception\Attribute\MissingParameterException;
+
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
-class MetadataProvider extends AbstractSerializeAttribute
+class SetThrough extends AbstractSerializeAttribute
 {
     public function __construct(
-        public string  $metadataProviderClass,
+        public string  $method_name,
         public ?string $parameter_name = null,
         public ?array  $ref_groups = null,
+        public ?array  $args = null,
+        public string  $type = 'function'
     )
     {
     }
@@ -22,18 +26,21 @@ class MetadataProvider extends AbstractSerializeAttribute
             $metadata[$group] = [
                 'properties' => [
                         $this->parameter_name ?? '' => [
-                        'metadata_service' => $this->metadataProviderClass
+                        'set' => ['type' => $this->type, 'name' => $this->method_name, 'args' => $this->args]
                     ]
                 ]
             ];
         }
+
         return $metadata;
     }
 
+    /**
+     * @throws MissingParameterException
+     */
     function validate()
     {
-        $this->hasParametersOrThrowException(['metadataProviderClass', 'parameter_name', 'ref_groups']);
+        $this->hasParametersOrThrowException(['method_name', 'parameter_name', 'ref_groups', 'args']);
         return true;
     }
-
 }
