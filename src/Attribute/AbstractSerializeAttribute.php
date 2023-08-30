@@ -7,6 +7,14 @@ use Gianfriaur\Serializer\Exception\Attribute\MissingParameterException;
 abstract class AbstractSerializeAttribute
 {
 
+    public function __construct(
+        public ?string $parameter_name = null,
+        public ?array  $ref_groups = null,
+    )
+    {
+
+    }
+
     abstract function injectMetadata(): array;
 
     abstract function validate();

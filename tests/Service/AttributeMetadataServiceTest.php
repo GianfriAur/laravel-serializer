@@ -2,6 +2,7 @@
 
 namespace Gianfriaur\Serializer\Tests\Service;
 
+use Gianfriaur\Serializer\Exception\Attribute\GroupAttributeMalformed;
 use Gianfriaur\Serializer\Exception\Attribute\MissingParameterException;
 use Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService;
 use Gianfriaur\Serializer\Service\MetadataService\DefaultMetadataService;
@@ -11,6 +12,14 @@ use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Get\MultipleGet
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\GetThrough\BadGetThroughAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\GetThrough\GetThroughAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\GetThrough\MultipleGetThroughAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\BadGroupParameterMalformedAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\BadGroupParameterMalformedGroupItSelfAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\BadGroupParameterMalformedSubGroupItSelfAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\BadGroupParameterMalformedSubGroupNotAbstractSerializeAttributeAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\FirstGroupAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\FourthGroupAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\SecondGroupAttributeTestObject;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Group\ThirdGroupAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Groups\BadGroupsAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Groups\GroupsAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Groups\MultipleGroupsAttributeTestObject;
@@ -324,7 +333,7 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
         ];
 
         $expected_metadata_all = [...$expected_metadata_base, ... [
-            "properties" => ["bar" => ["get" => ['type' => 'function', 'name' => 'getBar', 'args' => [1, 2,3]]]]
+            "properties" => ["bar" => ["get" => ['type' => 'function', 'name' => 'getBar', 'args' => [1, 2, 3]]]]
         ]];
 
         $expected_metadata_other = [...$expected_metadata_base, ... [
@@ -350,14 +359,14 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
         ];
 
         $expected_metadata_list = [...$expected_metadata_base, ... [
-            "properties" => [  "bar" => ["get" => ['type' => 'function', 'name' => 'getBar', 'args' => [1, 2,3]]]]
+            "properties" => ["bar" => ["get" => ['type' => 'function', 'name' => 'getBar', 'args' => [1, 2, 3]]]]
         ]];
 
         $expected_metadata_detail = [...$expected_metadata_base, ... [
             "properties" => [
-                "bar" => ["get" => ['type' => 'function', 'name' => 'getBar', 'args' => [1, 2,3]]],
-                "bar_bis" => ["get" => ['type' => 'function', 'name' => 'getBarBis', 'args' => [1, 2,3]]],
-                "bar_custom" => ["get" => ['type' => 'custom', 'name' => 'getBarCustom', 'args' => [1, 2,3]]],
+                "bar" => ["get" => ['type' => 'function', 'name' => 'getBar', 'args' => [1, 2, 3]]],
+                "bar_bis" => ["get" => ['type' => 'function', 'name' => 'getBarBis', 'args' => [1, 2, 3]]],
+                "bar_custom" => ["get" => ['type' => 'custom', 'name' => 'getBarCustom', 'args' => [1, 2, 3]]],
             ]
         ]];
 
@@ -462,7 +471,7 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
         ];
 
         $expected_metadata_all = [...$expected_metadata_base, ... [
-            "properties" => ["bar" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2,3]]]]
+            "properties" => ["bar" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]]]]
         ]];
 
         $expected_metadata_other = [...$expected_metadata_base, ... [
@@ -488,14 +497,14 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
         ];
 
         $expected_metadata_list = [...$expected_metadata_base, ... [
-            "properties" => [  "bar" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2,3]]]]
+            "properties" => ["bar" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]]]]
         ]];
 
         $expected_metadata_detail = [...$expected_metadata_base, ... [
             "properties" => [
-                "bar" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2,3]]],
-                "bar_bis" => ["set" => ['type' => 'function', 'name' => 'setBarBis', 'args' => [1, 2,3]]],
-                "bar_custom" => ["set" => ['type' => 'custom', 'name' => 'setBarCustom', 'args' => [1, 2,3]]],
+                "bar" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]]],
+                "bar_bis" => ["set" => ['type' => 'function', 'name' => 'setBarBis', 'args' => [1, 2, 3]]],
+                "bar_custom" => ["set" => ['type' => 'custom', 'name' => 'setBarCustom', 'args' => [1, 2, 3]]],
             ]
         ]];
 
@@ -508,7 +517,7 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
         $this->assertEquals([...$expected_metadata_other, ...["groups" => ["other"]]], $metadata_other);
     }
 
-    public function test_BadSetThroughAttributeTestObject_ok()
+    public function test_BadSetThroughAttributeTestObjectAttributeTestObject_ok()
     {
         $ms = $this->getNewAttributeMetadataService();
 
@@ -517,4 +526,228 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
 
         $metadata_list = $ms->getSerializationMetadata(BadSetThroughAttributeTestObject::class, ['list']);
     }
-}
+
+    public function test_BadGroupParameterMalformedAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $this->expectException(GroupAttributeMalformed::class);
+        $this->expectExceptionMessage('In the attribute \'Group\' the parameter \'parameters\' can only contain string or array es:  #[Group( ... , parameters: [ \'attr\', \'attr_2\' => [] ] )]');
+
+        $metadata_list = $ms->getSerializationMetadata(BadGroupParameterMalformedAttributeTestObject::class, ['list']);
+    }
+
+    public function test_BadGroupParameterMalformedGroupItSelfAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $this->expectException(GroupAttributeMalformed::class);
+        $this->expectExceptionMessage('In the attribute \'Group\' the parameter \'parameters\' can\'t contains it self');
+
+        $metadata_list = $ms->getSerializationMetadata(BadGroupParameterMalformedGroupItSelfAttributeTestObject::class, ['list']);
+    }
+
+    public function test_BadGroupParameterMalformedSubGroupItSelfAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $this->expectException(GroupAttributeMalformed::class);
+        $this->expectExceptionMessage('In the attribute \'Group\' the parameter \'parameters\' can\'t contains it self');
+
+        $metadata_list = $ms->getSerializationMetadata(BadGroupParameterMalformedSubGroupItSelfAttributeTestObject::class, ['list']);
+    }
+
+    public function test_BadGroupParameterMalformedSubGroupNotAbstractSerializeAttributeAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $this->expectException(GroupAttributeMalformed::class);
+        $this->expectExceptionMessage('In the attribute \'Group\' the parameter \'parameters\' can contain only AbstractSerializeAttribute es:  #[Group( ... , parameters: [ \'attr\', \'attr_2\' => [ new Name( ... ) ] ]');
+
+        $metadata_list = $ms->getSerializationMetadata(BadGroupParameterMalformedSubGroupNotAbstractSerializeAttributeAttributeTestObject::class, ['list']);
+    }
+
+    public function test_FirstGroupAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $metadata_list = $ms->getSerializationMetadata(FirstGroupAttributeTestObject::class, ['list']);
+        $metadata_detail = $ms->getSerializationMetadata(FirstGroupAttributeTestObject::class, ['detail']);
+        $metadata_other = $ms->getSerializationMetadata(FirstGroupAttributeTestObject::class, ['other']);
+
+        $expected_metadata_base = [
+            "metadata_service" => "Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService"
+        ];
+
+        $expected_metadata_list = [...$expected_metadata_base, ... [
+            "properties" => [
+                "foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_detail = [...$expected_metadata_base, ... [
+            "properties" => [
+                "foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ],
+                "bar" => [
+                    "set" => ['type' => 'direct', 'property' => 'bar'],
+                    "get" => ['type' => 'direct', 'property' => 'bar'],
+                    "name" => 'bar'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_other = [...$expected_metadata_base, ... [
+            "properties" => []
+        ]];
+
+        $this->assertEquals([...$expected_metadata_list, ...["groups" => ["list"]]], $metadata_list);
+        $this->assertEquals([...$expected_metadata_detail, ...["groups" => ["detail"]]], $metadata_detail);
+        $this->assertEquals([...$expected_metadata_other, ...["groups" => ["other"]]], $metadata_other);
+    }
+
+    public function test_SecondGroupAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $metadata_list = $ms->getSerializationMetadata(SecondGroupAttributeTestObject::class, ['list']);
+        $metadata_detail = $ms->getSerializationMetadata(SecondGroupAttributeTestObject::class, ['detail']);
+        $metadata_other = $ms->getSerializationMetadata(SecondGroupAttributeTestObject::class, ['other']);
+
+        $expected_metadata_base = [
+            "metadata_service" => "Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService"
+        ];
+
+        $expected_metadata_list = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_detail = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ],
+                "my_bar" => [
+                    "set" => ['type' => 'direct', 'property' => 'bar'],
+                    "get" => ['type' => 'direct', 'property' => 'bar'],
+                    "name" => 'bar'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_other = [...$expected_metadata_base, ... [
+            "properties" => []
+        ]];
+
+        $this->assertEquals([...$expected_metadata_list, ...["groups" => ["list"]]], $metadata_list);
+        $this->assertEquals([...$expected_metadata_detail, ...["groups" => ["detail"]]], $metadata_detail);
+        $this->assertEquals([...$expected_metadata_other, ...["groups" => ["other"]]], $metadata_other);
+    }
+
+    public function test_ThirdGroupAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $metadata_list = $ms->getSerializationMetadata(ThirdGroupAttributeTestObject::class, ['list']);
+        $metadata_detail = $ms->getSerializationMetadata(ThirdGroupAttributeTestObject::class, ['detail']);
+        $metadata_other = $ms->getSerializationMetadata(ThirdGroupAttributeTestObject::class, ['other']);
+
+        $expected_metadata_base = [
+            "metadata_service" => "Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService"
+        ];
+
+        $expected_metadata_list = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_detail = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ],
+                "my_bar" => [
+                    "set" => ['type' => 'direct', 'property' => 'bar'],
+                    "get" => ['type' => 'direct', 'property' => 'bar'],
+                    "name" => 'my_amazing_bar'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_other = [...$expected_metadata_base, ... [
+            "properties" => []
+        ]];
+
+        $this->assertEquals([...$expected_metadata_list, ...["groups" => ["list"]]], $metadata_list);
+        $this->assertEquals([...$expected_metadata_detail, ...["groups" => ["detail"]]], $metadata_detail);
+        $this->assertEquals([...$expected_metadata_other, ...["groups" => ["other"]]], $metadata_other);
+    }
+
+    public function test_FourthGroupAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $metadata_list = $ms->getSerializationMetadata(FourthGroupAttributeTestObject::class, ['list']);
+        $metadata_detail = $ms->getSerializationMetadata(FourthGroupAttributeTestObject::class, ['detail']);
+        $metadata_other = $ms->getSerializationMetadata(FourthGroupAttributeTestObject::class, ['other']);
+
+        $expected_metadata_base = [
+            "metadata_service" => "Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService"
+        ];
+
+        $expected_metadata_list = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_detail = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ],
+                "my_bar" => [
+                    "set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]],
+                    "get" => ['type' => 'direct', 'property' => 'bar'],
+                    "name" => 'my_amazing_bar'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_other = [...$expected_metadata_base, ... [
+            "properties" => []
+        ]];
+
+        $this->assertEquals([...$expected_metadata_list, ...["groups" => ["list"]]], $metadata_list);
+        $this->assertEquals([...$expected_metadata_detail, ...["groups" => ["detail"]]], $metadata_detail);
+        $this->assertEquals([...$expected_metadata_other, ...["groups" => ["other"]]], $metadata_other);
+    }
+}//

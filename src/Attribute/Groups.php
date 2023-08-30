@@ -11,7 +11,9 @@ class Groups extends AbstractSerializeAttribute
         public ?string $parameter_name=null,
         public ?array $ref_groups=null,
     )
-    {}
+    {
+        parent::__construct($parameter_name,$ref_groups);
+    }
     function injectMetadata(): array
     {
         $metadata = [];

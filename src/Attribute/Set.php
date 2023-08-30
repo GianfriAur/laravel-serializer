@@ -15,6 +15,7 @@ class Set extends AbstractSerializeAttribute
         public string  $type = 'direct'
     )
     {
+        parent::__construct($parameter_name,$ref_groups);
     }
 
     function injectMetadata(): array

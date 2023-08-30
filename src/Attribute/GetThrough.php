@@ -10,12 +10,13 @@ class GetThrough extends AbstractSerializeAttribute
 {
     public function __construct(
         public string  $method_name,
+        public ?array  $args = null,
         public ?string $parameter_name = null,
         public ?array  $ref_groups = null,
-        public ?array  $args = null,
         public string  $type = 'function'
     )
     {
+        parent::__construct($parameter_name,$ref_groups);
     }
 
     function injectMetadata(): array

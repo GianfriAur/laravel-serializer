@@ -12,6 +12,7 @@ class MetadataProvider extends AbstractSerializeAttribute
         public ?array  $ref_groups = null,
     )
     {
+        parent::__construct($parameter_name,$ref_groups);
     }
 
     function injectMetadata(): array
