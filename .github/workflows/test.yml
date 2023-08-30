@@ -32,11 +32,15 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
-    - name: PHPUnit tests
+    - name: PHPUnit Tests
       uses: php-actions/phpunit@v3
       with:
-        php_extensions: "xdebug"
-        coverage_clover: "clover.xml"
+        php_extensions: xdebug
+        bootstrap: vendor/autoload.php
+        configuration: phpunit.xml
+        args: --coverage-text
+      env:
+        XDEBUG_MODE: coverage
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
