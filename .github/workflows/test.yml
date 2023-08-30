@@ -32,6 +32,9 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
+    - name: Run tests
+      run: php ./vendor/bin/phpunit
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       env:
