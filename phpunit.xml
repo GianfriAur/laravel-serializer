@@ -5,12 +5,9 @@
       <directory suffix="Test.php">./tests/Service</directory>
     </testsuite>
   </testsuites>
-  <coverage cacheDirectory=".phpunit.cache/code-coverage" processUncoveredFiles="true">
-    <include>
-      <directory suffix=".php">src</directory>
-    </include>
+  <coverage>
     <report>
-      <clover outputFile="clover.xml" />
+      <clover outputFile="clover.xml"/>
     </report>
   </coverage>
   <php>
@@ -22,4 +19,9 @@
     <env name="QUEUE_DRIVER" value="sync"/>
     <env name="MAIL_DRIVER" value="array"/>
   </php>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+  </source>
 </phpunit>
