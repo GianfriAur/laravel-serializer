@@ -17,15 +17,9 @@ class Group extends AbstractSerializeAttribute
 
     protected function metadataMergeRecursive(...$arrays)
     {
-        if (sizeof($arrays) < 2) {
-            return;
-        }
         $merged = array();
         while ($arrays) {
             $array = array_shift($arrays);
-            if (!is_array($array)) {
-                return;
-            }
             if (!$array)
                 continue;
             foreach ($array as $key => $value)

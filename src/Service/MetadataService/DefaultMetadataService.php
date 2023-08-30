@@ -115,9 +115,6 @@ class DefaultMetadataService implements MetadataServiceInterface
 
     protected function metadataMergeRecursive(...$arrays)
     {
-        if (sizeof($arrays) < 2) {
-            return;
-        }
         $merged = array();
         while ($arrays) {
             $array = array_shift($arrays);

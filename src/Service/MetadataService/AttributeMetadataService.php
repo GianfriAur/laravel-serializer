@@ -33,12 +33,6 @@ class AttributeMetadataService extends DefaultMetadataService
         ];
     }
 
-
-    private function getKey(string $object, array $groups)
-    {
-        return md5($object . '-' . join('-', $groups));
-    }
-
     private function classHasSerializationAttributes(string $className): bool
     {
         $reflection = new ReflectionClass($className);
@@ -50,116 +44,6 @@ class AttributeMetadataService extends DefaultMetadataService
             }
         }
         return false;
-    }
-
-
-    /** @noinspection PhpUnused */
-    public function manageGroupAttribute(Group $instance): array
-    {
-        $metadata = [$instance->name => ['' => []]];
-        foreach ($instance->parameters as $key => $parameter) {
-
-            if (is_numeric($key)) {
-                if (!is_string($parameter)) {
-                    // throw exception Group parameters is malformed
-                }
-                $metadata[$instance->name]['properties'][$parameter] = [
-                    'get' => ['type' => 'direct', 'property' => $parameter],
-                    'set' => ['type' => 'direct', 'property' => $parameter],
-                    'name' => $parameter
-                ];
-            }
-
-            if (is_string($key) && is_string($parameter)) {
-                $metadata[$instance->name]['properties'][$key] = [
-                    'get' => ['type' => 'direct', 'property' => $key],
-                    'set' => ['type' => 'direct', 'property' => $key],
-                    'name' => $parameter
-                ];
-            }
-
-            if (is_string($key) && $parameter instanceof AbstractSerializeAttribute) {
-
-                if ($parameter instanceof Group) {
-                    // throw exception Group can't have Group in parameters
-                }
-
-                if ($parameter instanceof Get) {
-                    $metadata[$instance->name]['properties'][$key] = [
-                        'get' => ['type' => 'function', 'name' => $parameter->method_name, 'args' => $parameter->args ?? []],
-                        'name' => $key
-                    ];
-                }
-                if ($parameter instanceof SetParameter) {
-                    $metadata[$instance->name]['properties'][$key] = [
-                        'set' => ['type' => 'function', 'name' => $parameter->method_name, 'args' => $parameter->args ?? []],
-                        'name' => $key
-                    ];
-                }
-                if ($parameter instanceof Groups) {
-                    $metadata[$instance->name]['properties'][$key] = [
-                        'groups' => $parameter->groups
-                    ];
-                }
-                if ($parameter instanceof MetadataProvider) {
-                    $metadata[$instance->name]['properties'][$key] = [
-                        'metadata_service' => $parameter->metadataProviderClass
-                    ];
-                }
-                if ($parameter instanceof Name) {
-                    $metadata[$instance->name]['properties'][$key] = [
-                        'metadata_service' => $parameter->name
-                    ];
-                }
-            }
-            if (is_string($key)) {
-
-                foreach ($parameter as $parameter_element) {
-                    if ($parameter_element instanceof Group) {
-                        // throw exception Group can't have Group in parameters
-                    }
-
-                    if ($parameter_element instanceof Get) {
-                        $metadata[$instance->name]['properties'][$key] = [
-                            'get' => ['type' => 'function', 'name' => $parameter_element->method_name, 'args' => $parameter_element->args ?? []],
-                            'name' => $key
-                        ];
-                    }
-                    if ($parameter_element instanceof SetParameter) {
-                        $metadata[$instance->name]['properties'][$key] = [
-                            'set' => ['type' => 'function', 'name' => $parameter_element->method_name, 'args' => $parameter_element->args ?? []],
-                            'name' => $key
-                        ];
-                    }
-                    if ($parameter_element instanceof Groups) {
-                        $metadata[$instance->name]['properties'][$key] = [
-                            'groups' => $parameter_element->groups
-                        ];
-                    }
-                    if ($parameter_element instanceof MetadataProvider) {
-                        $metadata[$instance->name]['properties'][$key] = [
-                            'metadata_service' => $parameter_element->metadataProviderClass
-                        ];
-                    }
-                    if ($parameter_element instanceof Name) {
-                        $metadata[$instance->name]['properties'][$key] = [
-                            'metadata_service' => $parameter_element->name
-                        ];
-                    }
-
-                    if (is_string($parameter_element)) {
-                        $metadata[$instance->name]['properties'][$key] = [
-                            'get' => ['type' => 'direct', 'property' => $key],
-                            'set' => ['type' => 'direct', 'property' => $key],
-                            'name' => $parameter_element
-                        ];
-                    }
-                }
-            }
-        }
-
-        return $metadata;
-
     }
 
     private function getClassFullMetadataFromClassName(string $className): ?array
@@ -174,19 +58,6 @@ class AttributeMetadataService extends DefaultMetadataService
                     $instance->validate();
                     $metadata = $this->metadataMergeRecursive($metadata, $instance->injectMetadata());
 
-                  /*  $attribute_name = last(explode('\\', $instance::class));
-
-                    $mix_in_metadata = null;
-
-                    if (method_exists($this, "manage{$attribute_name}Attribute")) {
-                        $mix_in_metadata = $this->{"manage{$attribute_name}Attribute"}($instance);
-                    }
-
-
-                    if ($mix_in_metadata !== null) {
-                        $metadata = $this->metadataMergeRecursive($metadata, $mix_in_metadata);
-                    }
-*/
                 }
             }
         }
@@ -226,14 +97,6 @@ class AttributeMetadataService extends DefaultMetadataService
         return false;
     }
 
-    public function hasSerializationMetadata_bis(mixed $object, array $groups): bool
-    {
-
-
-        $key = md5(gettype($object) . '-' . join('-', $groups));
-
-
-    }
 
     public function getSerializationMetadata(mixed $object, array $groups): mixed
     {

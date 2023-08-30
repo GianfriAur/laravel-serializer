@@ -239,51 +239,6 @@ class DefaultSerializer implements SerializerInterface
         return $metadata_services;
     }
 
-    private function actualSerialization(mixed $object, array|string $group, EngineInterface $engine = null, ?string $metadataProviderClass = null,?array $serializationStack=[]): mixed
-    {
-        $serialization_metadata = $this->getObjectSerializationMetadata($object, is_array($group) ? $group : [$group], $metadataProviderClass);
-
-        if (!$serialization_metadata) {
-            return $engine->getEmptySerialization();
-        }
-
-        if (in_array($object,$serializationStack)){
-            if ($this->getOptions()['prevent_recursive_serialization'] === true) {
-                return null;
-            }else{
-                throw new RecursiveSerializationException();
-            }
-        }else{
-            $serializationStack[] = $object;
-        }
-
-        $serialized = $engine->serializeObject($object, $serialization_metadata,$serializationStack);
-
-        if ($serialized == $engine->getEmptySerialization() && $this->getOptions()['serialize_empty_as_null'] === true) {
-            return null;
-        }
-
-        return $serialized;
-    }
-
-    private function clearArray($array):?array{
-
-        // if is array of arrays
-        if (array_reduce(array_map(fn($a)=>is_array($a), $array), fn($a, $b)=>$a && $b, true)){
-            foreach ($array as $key => $value) {
-                $array[$key] = $this->clearArray($value);
-            }
-        }
-
-        foreach ($array as $key => $value) {
-            if ($value === null) {
-                unset($array[$key]);
-            }
-        }
-
-        return $array;
-    }
-
     /**
      * serialize your object
      * @param mixed $object
