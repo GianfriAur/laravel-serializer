@@ -6,6 +6,7 @@ use Gianfriaur\Serializer\Exception\Attribute\GroupAttributeMalformed;
 use Gianfriaur\Serializer\Exception\Attribute\MissingParameterException;
 use Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService;
 use Gianfriaur\Serializer\Service\MetadataService\DefaultMetadataService;
+use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\AllAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Get\BadGetAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Get\GetAttributeTestObject;
 use Gianfriaur\Serializer\Tests\Service\AttributeMetadataService\Get\MultipleGetAttributeTestObject;
@@ -738,6 +739,61 @@ class AttributeMetadataServiceTest extends \Orchestra\Testbench\TestCase
                     "set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]],
                     "get" => ['type' => 'direct', 'property' => 'bar'],
                     "name" => 'my_amazing_bar'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_other = [...$expected_metadata_base, ... [
+            "properties" => []
+        ]];
+
+        $this->assertEquals([...$expected_metadata_list, ...["groups" => ["list"]]], $metadata_list);
+        $this->assertEquals([...$expected_metadata_detail, ...["groups" => ["detail"]]], $metadata_detail);
+        $this->assertEquals([...$expected_metadata_other, ...["groups" => ["other"]]], $metadata_other);
+    }
+
+    public function test_AllAttributeTestObject_ok()
+    {
+        $ms = $this->getNewAttributeMetadataService();
+
+        $metadata_list = $ms->getSerializationMetadata(AllAttributeTestObject::class, ['list']);
+        $metadata_detail = $ms->getSerializationMetadata(AllAttributeTestObject::class, ['detail']);
+        $metadata_other = $ms->getSerializationMetadata(AllAttributeTestObject::class, ['other']);
+
+        $expected_metadata_base = [
+            "metadata_service" => "Gianfriaur\Serializer\Service\MetadataService\AttributeMetadataService"
+        ];
+
+        $expected_metadata_list = [...$expected_metadata_base, ... [
+            "properties" => [
+                "my_foo" => [
+                    "set" => ['type' => 'direct', 'property' => 'foo'],
+                    "get" => ['type' => 'direct', 'property' => 'foo'],
+                    "name" => 'foo'
+                ],
+                "my_bar" => [
+                    "set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]],
+                    "get" => ['type' => 'direct', 'property' => 'bar'],
+                    "name" => 'my_amazing_bar'
+                ]
+            ]
+        ]];
+
+        $expected_metadata_detail = [...$expected_metadata_base, ... [
+            "properties" => [
+                "get_test" => ["get" => ['type' => 'direct', 'property' => 'get_test']],
+                "get_through_test" => ["get" => ['type' => 'function', 'name' => 'getBarTest', 'args' => [1, 2, 3]]],
+                "groups_test" => ["groups" => ['biz']],
+                "metadata_provider_test" => ["metadata_service" => DefaultMetadataService::class],
+                "name_test" => ["name" => 'foo'],
+                "set_test" => ["set" => ['type' => 'direct', 'property' => 'bar']],
+                "set_through_test" => ["set" => ['type' => 'function', 'name' => 'setBar', 'args' => [1, 2, 3]]],
+                "all_test" => [
+                    "get" => ['type' => 'direct', 'property' => 'get_test'],
+                    "groups" => ['biz'],
+                    "metadata_service" => DefaultMetadataService::class,
+                    "name" => 'foo',
+                    "set" => ['type' => 'direct', 'property' => 'bar']
                 ]
             ]
         ]];
